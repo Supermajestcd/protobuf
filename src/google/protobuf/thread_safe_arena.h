@@ -124,6 +124,14 @@ class PROTOBUF_EXPORT ThreadSafeArena {
   // Add object pointer and cleanup function pointer to the list.
   void AddCleanup(void* elem, void (*cleanup)(void*));
 
+  PROTOBUF_NDEBUG_INLINE void* AllocateFromStringBlock() {
+    SerialArena* arena;
+    if (PROTOBUF_PREDICT_TRUE(GetSerialArenaFast(&arena))) {
+      return arena->AllocateFromStringBlock();
+    }
+    return GetSerialArenaFallback(0)->AllocateFromStringBlockFallback();
+  }
+
  private:
   friend class ArenaBenchmark;
   friend class TcParser;
@@ -222,7 +230,7 @@ class PROTOBUF_EXPORT ThreadSafeArena {
   // Releases all memory except the first block which it returns. The first
   // block might be owned by the user and thus need some extra checks before
   // deleting.
-  SerialArena::Memory Free(size_t* space_allocated);
+  SizedPtr Free(size_t* space_allocated);
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4324)
